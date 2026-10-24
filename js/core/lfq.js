@@ -39,7 +39,7 @@
     }
     if (rows.length < 30) throw new Error('有效體長資料不足（少於 30 筆）。');
     rows.sort((a, b) => a.d - b.d);
-    const minL = Math.min(...rows.map(r => r.len)), maxL = Math.max(...rows.map(r => r.len));
+    const lens = rows.map(r => r.len), minL = U.min(lens), maxL = U.max(lens);
     const Lmin = Math.floor(minL / bin) * bin;
     const breaks = U.seq(Lmin, maxL + bin, bin);
     const mid = breaks.map(b => +(b + bin / 2).toFixed(10));
@@ -110,7 +110,7 @@
 
   /** 成長曲線世代軌跡（同 lfqFitCurves 內部計算） */
   L.cohortTraces = function (lr, par, agemax) {
-    const t = lr.t, tmax = Math.max(...t), tmin = Math.min(...t);
+    const t = lr.t, tmax = U.max(t), tmin = U.min(t);
     if (agemax == null) agemax = Math.ceil((1 / -par.K) * Math.log(1 - (par.Linf * 0.95) / par.Linf));
     let ncoh = agemax + Math.ceil(tmax - tmin);
     const frac = ((par.t_anchor + 1e6) % 1);
@@ -166,7 +166,7 @@
       if (noImp >= (o.run || o.maxiter)) break;
       if (it === o.maxiter - 1) break;
       // 線性縮放選擇（sfactor = 2）
-      const fmin = Math.min(...Fit), fmax = Math.max(...Fit), fmean = U.mean(Fit), sf = 2;
+      const fmin = U.min(Fit), fmax = U.max(Fit), fmean = U.mean(Fit), sf = 2;
       let a, b;
       if (fmin > (sf * fmean - fmax) / (sf - 1)) { const dl = fmax - fmean; a = (sf - 1) * fmean / dl; b = fmean * (fmax - sf * fmean) / dl; }
       else { const dl = fmean - fmin; a = fmean / dl; b = -fmin * fmean / dl; }

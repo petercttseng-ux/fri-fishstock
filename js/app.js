@@ -61,7 +61,7 @@
   }
   const checkedOf = id => Array.from(document.querySelectorAll(`#${id} input:checked`)).map(x => x.value);
   const radio = name => (document.querySelector(`input[name="${name}"]:checked`) || {}).value;
-  const guess = (names, re, fallback) => names.find(n => re.test(n)) || fallback || names[0] || '';
+  const guess = (names, re, fallback) => { const hit = names.find(n => re.test(n)); return hit !== undefined ? hit : (fallback !== undefined ? fallback : (names[0] || '')); };
   function xlsxDownload(sheets, filename) {
     const wb = XLSX.utils.book_new();
     Object.keys(sheets).forEach(n => { const rows = sheets[n]; if (rows && rows.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), n.slice(0, 31)); });
@@ -214,7 +214,7 @@
       const prog = new Array(nw).fill(0);
       const parts = await Promise.all(Array.from({ length: nw }, (_, w) => pool.run('lfqBoot', { lfq: S.lf.lfq, opt: Object.assign({}, o, { nboot: Math.min(per, nb - w * per), popSize: Math.max(30, Math.round(o.popSize * 0.7)), maxiter: Math.max(30, Math.round(o.maxiter * 0.7)), seed: 1 + 1000 * w }) },
         p => { prog[w] = p; busy.prog(U.mean(prog)); })));
-      const draws = [].concat(...parts.map(p => p.draws));
+      const draws = U.flat(parts.map(p => p.draws));
       const nm = [['L∞', 'Linf'], ['K', 'K'], ['t_anchor', 't_anchor'], ["φ'", 'phiL']];
       S.lf.boot = { draws, summary: nm.map(([lab, k]) => { const v = draws.map(d => d[k]); return { 參數: lab, 中位數: U.round(U.median(v), 3), '2.5%': U.round(U.quantile(v, 0.025), 3), '97.5%': U.round(U.quantile(v, 0.975), 3) }; }) };
       plot('lf_bplot', G.lfqBoot(S.lf.boot)); $('lf_btab').innerHTML = table(S.lf.boot.summary); gotoTab('lf-boot');
@@ -353,6 +353,7 @@
       `${vbox(`${yl} 年 F/Fmsy`, h.mu.toFixed(2), `95%：${h.lci.toFixed(2)}–${h.uci.toFixed(2)}`, h.mu <= 1 ? 'success' : 'danger')}` +
       `${vbox('MSY', Number(e.MSY.mu.toPrecision(4)).toLocaleString(), `95%：${Number(e.MSY.lci.toPrecision(3)).toLocaleString()}–${Number(e.MSY.uci.toPrecision(3)).toLocaleString()}`)}${vbox('資源狀態（中位數）', st, '', 'grey')}</div>` +
       (S.spm.set.quick ? '<div class="alert alert-warning py-2">目前為快速試算，MCMC 抽樣較少；正式評估請取消「快速試算」後重新執行。</div>' : '') +
+      (f.mcmc.ntUser ? `<div class="alert alert-info py-2">事後抽樣數過多，為避免瀏覽器記憶體不足，抽稀間隔已由 ${f.mcmc.ntUser} 自動調整為 ${f.mcmc.nt}（保存約 ${f.nDraws.toLocaleString()} 組）。</div>` : '') +
       `<p class="small text-muted">${f.nDraws.toLocaleString()} 組事後抽樣（${f.mcmc.nc} 條鏈）；區塊更新接受率 ${(100 * f.accept).toFixed(0)}%；運算時間 ${S.spm.secs.toFixed(1)} 秒。</p>`;
     $('jb_est').innerHTML = table(FS.spm.estimatesTable(f));
     jbDiag();

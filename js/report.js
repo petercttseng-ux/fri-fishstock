@@ -64,7 +64,7 @@
   // ---------------------------------------------------------------- 各章節
   function secCatch(c, year, C, unit) {
     const n = year.length, last5 = year.map((_, i) => i).slice(-5), y5 = last5.map(i => year[i]), c5 = last5.map(i => C[i]);
-    const imax = U.argmax(C), imin = C.indexOf(Math.min(...C));
+    const imax = U.argmax(C), imin = C.indexOf(U.min(C));
     const F1 = fig(c, G.catchBars(year, C, unit), `漁獲量之年間變化（${year[0]}～${year[n - 1]} 年）`, null, 4.8, 3);
     const k0 = Math.max(0, n - 20); let rows = [];
     for (let i = k0; i < n; i++) rows.push({ 年: year[i], [`漁獲量（${unit}）`]: C[i] });
@@ -73,10 +73,10 @@
       rows = a.map((r, i) => ({ 年: r.年, [`漁獲量（${unit}）`]: r[`漁獲量（${unit}）`], ' 年 ': b[i] ? b[i].年 : null, [` 漁獲量（${unit}） `]: b[i] ? b[i][`漁獲量（${unit}）`] : null }));
     }
     const T1 = tab(c, rows, `近年漁獲量（${year[k0]}～${year[n - 1]} 年，單位：${unit}）`);
-    const txt = P(`本資源之年漁獲量介於 ${fbig(Math.min(...C))}～${fbig(Math.max(...C))} ${unit}之間（圖 ${F1.n}）；歷年最高為 ${year[imax]} 年之 ${fbig(C[imax])} ${unit}，最低為 ${year[imin]} 年之 ${fbig(C[imin])} ${unit}。`,
-      `最近 5 年（${y5[0]}～${y5[y5.length - 1]} 年）漁獲量介於 ${fbig(Math.min(...c5))}～${fbig(Math.max(...c5))} ${unit}，平均 ${fbig(U.mean(c5))} ${unit}；最近年（${y5[y5.length - 1]} 年）漁獲量為 ${fbig(c5[c5.length - 1])} ${unit}（表 ${T1.n}）。`);
+    const txt = P(`本資源之年漁獲量介於 ${fbig(U.min(C))}～${fbig(U.max(C))} ${unit}之間（圖 ${F1.n}）；歷年最高為 ${year[imax]} 年之 ${fbig(C[imax])} ${unit}，最低為 ${year[imin]} 年之 ${fbig(C[imin])} ${unit}。`,
+      `最近 5 年（${y5[0]}～${y5[y5.length - 1]} 年）漁獲量介於 ${fbig(U.min(c5))}～${fbig(U.max(c5))} ${unit}，平均 ${fbig(U.mean(c5))} ${unit}；最近年（${y5[y5.length - 1]} 年）漁獲量為 ${fbig(c5[c5.length - 1])} ${unit}（表 ${T1.n}）。`);
     return { html: txt + F1.html + T1.html,
-      summary: `${fbig(Math.min(...c5))}～${fbig(Math.max(...c5))} ${unit}<br>最近（${y5[y5.length - 1]}）年：${fbig(c5[c5.length - 1])} ${unit}<br>平均：${fbig(U.mean(c5))} ${unit}（${y5[0]}～${y5[y5.length - 1]} 年）` };
+      summary: `${fbig(U.min(c5))}～${fbig(U.max(c5))} ${unit}<br>最近（${y5[y5.length - 1]}）年：${fbig(c5[c5.length - 1])} ${unit}<br>平均：${fbig(U.mean(c5))} ${unit}（${y5[0]}～${y5[y5.length - 1]} 年）` };
   }
 
   function secCpue(c, m) {
@@ -95,8 +95,8 @@
     const rel = idx.map(d => d.std_rel), yrs = idx.map(d => d.year), last3 = U.mean(rel.slice(-3)), k = Math.min(10, n);
     const sl = U.simpleLm(yrs.slice(-k), rel.slice(-k).map(Math.log)).b;
     const trend = !fin(sl) ? '' : sl > 0.02 ? '呈增加趨勢' : sl < -0.02 ? '呈減少趨勢' : '大致持平';
-    const status = '<h3>【豐度指標】</h3>' + P(`標準化 CPUE 於 ${yrs[U.argmax(rel)]} 年達最高、${yrs[rel.indexOf(Math.min(...rel))]} 年最低（圖 ${F1.n}）。最近 3 年（${yrs[Math.max(0, n - 3)]}～${yrs[n - 1]} 年）之平均相對指標為 ${last3.toFixed(2)}，`,
-      `為全期平均之 ${(100 * last3).toFixed(0)}%、歷年最高值之 ${(100 * last3 / Math.max(...rel)).toFixed(0)}%；近 ${k} 年指標${trend}（年變化率約 ${(100 * (Math.exp(sl) - 1)).toFixed(1)}%）。`,
+    const status = '<h3>【豐度指標】</h3>' + P(`標準化 CPUE 於 ${yrs[U.argmax(rel)]} 年達最高、${yrs[rel.indexOf(U.min(rel))]} 年最低（圖 ${F1.n}）。最近 3 年（${yrs[Math.max(0, n - 3)]}～${yrs[n - 1]} 年）之平均相對指標為 ${last3.toFixed(2)}，`,
+      `為全期平均之 ${(100 * last3).toFixed(0)}%、歷年最高值之 ${(100 * last3 / U.max(rel)).toFixed(0)}%；近 ${k} 年指標${trend}（年變化率約 ${(100 * (Math.exp(sl) - 1)).toFixed(1)}%）。`,
       `殘差分布及常態 Q-Q 圖如圖 ${F2.n}，應確認殘差大致對稱且無明顯型態，指標方可作為資源量之相對指數。`) + F1.html + T1.html + T2.html + F2.html;
     return { method, status, advice: `標準化 CPUE 近 ${k} 年${trend}，最近 3 年平均為全期平均之 ${(100 * last3).toFixed(0)}%。CPUE 未必與資源量成正比（如漁場集中、漁具效率提升），建議與其他資料（體長組成、科學調查）交叉比對。`,
       refs: ['Maunder, M.N. and Punt, A.E. 2004. Standardizing catch and effort data: a review of recent approaches. Fish. Res., 70: 141-159.'].concat(r.method === 'delta' ? ['Lo, N.C.H., Jacobson, L.D. and Squire, J.L. 1992. Indices of relative abundance from fish spotter data based on delta-lognormal models. Can. J. Fish. Aquat. Sci., 49: 2515-2526.'] : []),
@@ -179,9 +179,9 @@
     const q = k => ts[k].map((v, i) => [fit.yr[i], v.lci, v.mu, v.uci]);
     const F2 = fig(c, G.ratios(fit.yr, q('BBmsy'), q('FFmsy')), `推估之 B/Bmsy 與 F/Fmsy（${fit.yr[0]}～${yl} 年）`, '實線為中位數，陰影為 95% 信用區間；虛線為參考點（= 1）。', 7.4, 3, true);
     const F3 = fig(c, G.kobe(fit.yr, ts.BBmsy.map(v => v.mu), ts.FFmsy.map(v => v.mu), fit.kobe.stock, fit.kobe.harvest, 'Kobe 資源狀態圖'), `Kobe 圖（${fit.yr[0]}～${yl} 年）`, '灰點為最近年之事後抽樣分布；□ 為起始年，△ 為最近年。', 4.6, 4.4);
-    const bbmu = ts.BBmsy.map(v => v.mu), bmin = fit.yr[bbmu.indexOf(Math.min(...bbmu))];
+    const bbmu = ts.BBmsy.map(v => v.mu), bmin = fit.yr[bbmu.indexOf(U.min(bbmu))];
     let status = '<h3>【資源狀態（貝氏剩餘生產量模型）】</h3>' + P(`估計之 MSY 為 ${fsig(e.MSY.mu)} ${unit}（95% 信用區間 ${fsig(e.MSY.lci)}～${fsig(e.MSY.uci)}），環境負荷量 K 為 ${fsig(e.K.mu)} ${unit}，內在成長率 r 為 ${e.r.mu.toFixed(3)}（表 ${ET.n}）。`,
-      `B/Bmsy 於 ${bmin} 年達最低（${Math.min(...bbmu).toFixed(2)}），最近年（${yl} 年）之 B/Bmsy 中位數為 ${b.toFixed(2)}（${e['B_Bmsy.cur'].lci.toFixed(2)}～${e['B_Bmsy.cur'].uci.toFixed(2)}），F/Fmsy 為 ${fh.toFixed(2)}（${e['H_Hmsy.cur'].lci.toFixed(2)}～${e['H_Hmsy.cur'].uci.toFixed(2)}）（圖 ${F2.n}）。`,
+      `B/Bmsy 於 ${bmin} 年達最低（${U.min(bbmu).toFixed(2)}），最近年（${yl} 年）之 B/Bmsy 中位數為 ${b.toFixed(2)}（${e['B_Bmsy.cur'].lci.toFixed(2)}～${e['B_Bmsy.cur'].uci.toFixed(2)}），F/Fmsy 為 ${fh.toFixed(2)}（${e['H_Hmsy.cur'].lci.toFixed(2)}～${e['H_Hmsy.cur'].uci.toFixed(2)}）（圖 ${F2.n}）。`,
       `依此判斷，${z.text}（圖 ${F3.n}）。依事後分布，最近年位於綠區之機率為 ${fpct(pb.green)}、黃區 ${fpct(pb.yellow)}、橘區 ${fpct(pb.orange)}、紅區 ${fpct(pb.red)}。`) + ET.html + F2.html + F3.html;
     let nfail = 0, fails = [];
     if (m.diag && m.diag.length) {

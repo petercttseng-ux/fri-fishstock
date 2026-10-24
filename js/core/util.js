@@ -75,6 +75,11 @@
   };
   U.median = a => U.quantile(a, 0.5);
   U.q3 = a => [U.quantile(a, 0.025), U.quantile(a, 0.5), U.quantile(a, 0.975)];
+  // 大量資料時不可用 Math.max(...a)（參數個數過多會造成 call stack 溢位），改以迴圈計算
+  U.max = a => { let m = -Infinity; for (const v of a) if (v > m) m = v; return m; };
+  U.min = a => { let m = Infinity; for (const v of a) if (v < m) m = v; return m; };
+  U.pushAll = (dst, src) => { for (let i = 0; i < src.length; i++) dst.push(src[i]); return dst; };
+  U.flat = arrs => { const o = []; for (const a of arrs) U.pushAll(o, a); return o; };
   U.range = a => { let lo = Infinity, hi = -Infinity; for (const v of a) if (Number.isFinite(v)) { if (v < lo) lo = v; if (v > hi) hi = v; } return [lo, hi]; };
   U.seq = (from, to, by) => { const o = []; const n = Math.floor((to - from) / by + 1e-10); for (let i = 0; i <= n; i++) o.push(+(from + i * by).toFixed(10)); return o; };
   U.round = (x, d) => { const f = Math.pow(10, d); return Math.round(x * f) / f; };

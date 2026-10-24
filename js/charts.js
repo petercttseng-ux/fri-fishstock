@@ -72,7 +72,7 @@
   function lfqBars(lfq, M, posColor, negColor, scale) {
     const t = lfq.dates.map(FS.lfq.yeardec), mid = lfq.midLengths, bw = mid[1] - mid[0];
     let mx = 0; M.forEach(r => r.forEach(v => mx = Math.max(mx, Math.abs(v))));
-    const dt = t.length > 1 ? Math.min(...t.slice(1).map((v, i) => v - t[i])) : 0.1;
+    const dt = t.length > 1 ? U.min(t.slice(1).map((v, i) => v - t[i])) : 0.1;
     const sc = (scale || 0.85) * dt / (mx || 1), shapes = [];
     t.forEach((tj, j) => mid.forEach((m, l) => {
       const v = M[l][j]; if (!v) return;
@@ -86,7 +86,7 @@
     const b = lfqBars(lfq, lfq.catch, '#4a4a4a', '#bbb');
     return { data: [{ x: [b.t[0]], y: [b.mid[0]], mode: 'markers', marker: { opacity: 0 }, hoverinfo: 'skip', showlegend: false }],
       layout: base('月別體長頻度（原始）', { showlegend: false, shapes: b.shapes,
-        xaxis: ax('採樣月', Object.assign({ range: [Math.min(...b.t) - b.dt * 0.2, Math.max(...b.t) + b.dt * 1.1] }, dateTicks(b.t))),
+        xaxis: ax('採樣月', Object.assign({ range: [U.min(b.t) - b.dt * 0.2, U.max(b.t) + b.dt * 1.1] }, dateTicks(b.t))),
         yaxis: ax('體長組（cm）', { range: [b.mid[0] - 2, b.mid[b.mid.length - 1] + 2] }) }) };
   };
   G.lfqFit = function (lfq, par, MA) {
@@ -94,7 +94,7 @@
     const b = lfqBars(lr, lr.rcounts, '#222', '#ccc', 0.9);
     const data = [{ x: [b.t[0]], y: [b.mid[0]], mode: 'markers', marker: { opacity: 0 }, hoverinfo: 'skip', showlegend: false }];
     if (par) {
-      const tmin = Math.min(...b.t) - 0.05, tmax = Math.max(...b.t) + 0.25;
+      const tmin = U.min(b.t) - 0.05, tmax = U.max(b.t) + 0.25;
       const tr = FS.lfq.cohortTraces(lr, par, null);
       tr.tAs.forEach(ta => {
         const xs = [], ys = []; for (let x = Math.max(ta, tmin); x <= tmax; x += 0.01) { const ra = x - ta; if (ra > 0 && ra <= tr.agemax) { xs.push(x); ys.push(par.Linf * (1 - Math.exp(-par.K * (x - ta)))); } }
@@ -102,7 +102,7 @@
       });
     }
     return { data, layout: base('重整後體長頻度與 von Bertalanffy 成長曲線', { showlegend: false, shapes: b.shapes,
-      xaxis: ax('採樣月', Object.assign({ range: [Math.min(...b.t) - b.dt * 0.2, Math.max(...b.t) + b.dt * 1.1] }, dateTicks(b.t))),
+      xaxis: ax('採樣月', Object.assign({ range: [U.min(b.t) - b.dt * 0.2, U.max(b.t) + b.dt * 1.1] }, dateTicks(b.t))),
       yaxis: ax('體長組（cm）', { range: [b.mid[0] - 2, b.mid[b.mid.length - 1] + 2] }) }) };
   };
   G.lfqBoot = function (bt) {
@@ -119,7 +119,7 @@
     const inR = i => i >= cc.reg_int[0] && i <= cc.reg_int[1];
     const xo = [], yo = [], xi = [], yi = [];
     cc.t.forEach((v, i) => { if (!ok[i]) return; (inR(i) ? xi : xo).push(v); (inR(i) ? yi : yo).push(cc.y[i]); });
-    const xr = [Math.min(...xi), Math.max(...xi)];
+    const xr = [U.min(xi), U.max(xi)];
     return { data: [{ x: xo, y: yo, mode: 'markers', name: '未納入迴歸', marker: { symbol: 'circle-open', color: '#444', size: 8 } },
       { x: xi, y: yi, mode: 'markers', name: '納入迴歸', marker: { color: BLUE, size: 8 } },
       { x: xr, y: xr.map(x => cc.a + cc.b * x), mode: 'lines', name: '迴歸線', line: { color: RED, width: 2.5 } }],
@@ -157,7 +157,7 @@
   G.kobe = function (years, bb, ff, bbL, ffL, title) {
     const okL = bbL.map((v, i) => Number.isFinite(v) && Number.isFinite(ffL[i]));
     const bl = bbL.filter((_, i) => okL[i]), fl = ffL.filter((_, i) => okL[i]);
-    const xm = Math.max(2, ...bb.map(v => v * 1.1), U.quantile(bl, 0.95)), ym = Math.max(2, ...ff.map(v => v * 1.1), U.quantile(fl, 0.95));
+    const xm = Math.max(2, 1.1 * U.max(bb), U.quantile(bl, 0.95)), ym = Math.max(2, 1.1 * U.max(ff), U.quantile(fl, 0.95));
     const p = { red: 0, orange: 0, yellow: 0, green: 0 }; bl.forEach((b, i) => { const f = fl[i]; if (b < 1 && f > 1) p.red++; else if (b >= 1 && f > 1) p.orange++; else if (b < 1) p.yellow++; else p.green++; });
     Object.keys(p).forEach(k => p[k] = p[k] / bl.length);
     const step = Math.max(1, Math.floor(bl.length / 2500)), n = years.length;
@@ -256,7 +256,7 @@
   G.spmHindcast = function (hc) {
     const ref = hc[0], D = ref._D, N = ref.yr.length, nI = D.names.length, cols = Math.min(nI, 2), rows = Math.ceil(nI / cols);
     const L = base('', { showlegend: false }), g = grid(L, rows, cols, 0.1, 0.18), data = [], ann = [];
-    const ms = FS.spm.mase(hc), maxp = Math.max(...hc.slice(1).map(h => h.peel));
+    const ms = FS.spm.mase(hc), maxp = U.max(hc.slice(1).map(h => h.peel));
     D.names.forEach((nm, i) => {
       const x = ref.yr, o = D.I[i];
       data.push({ x, y: o, mode: 'markers', marker: { color: '#fff', size: 7, line: { color: '#111', width: 1.2 } }, xaxis: g[i].x, yaxis: g[i].y });
@@ -276,7 +276,7 @@
     const col = k => { const t = n > 1 ? k / (n - 1) : 0; const c1 = [30, 123, 79], c2 = [242, 193, 78], c3 = [179, 38, 30]; const mix = t < 0.5 ? [c1, c2, t * 2] : [c2, c3, (t - 0.5) * 2]; const c = mix[0].map((v, i) => Math.round(v + (mix[1][i] - v) * mix[2])); return `rgb(${c.join(',')})`; };
     pr.median.forEach((m, k) => ['bb', 'ff'].forEach((q, j) => data.push({ x: pr.years, y: m[q], mode: 'lines', name: `${m.pct >= 0 ? '+' : ''}${Math.round(100 * m.pct)}%`, legendgroup: 'g' + k, showlegend: j === 0, line: { color: col(k), width: 2 }, xaxis: g[j].x, yaxis: g[j].y })));
     L[g[0].ya].title.text = 'B/Bmsy（中位數）'; L[g[1].ya].title.text = 'F/Fmsy（中位數）'; L[g[0].xa].title.text = '年'; L[g[1].xa].title.text = '年';
-    const mxB = Math.max(1.2, ...pr.median.flatMap(m => m.bb)) * 1.05, mxF = Math.max(1.2, ...pr.median.flatMap(m => m.ff));
+    const mxB = Math.max(1.2, U.max(pr.median.flatMap(m => m.bb))) * 1.05, mxF = Math.max(1.2, U.max(pr.median.flatMap(m => m.ff)));
     L[g[0].ya].range = [0, mxB]; L[g[1].ya].range = [0, Math.min(mxF * 1.05, 4)];   // 資源崩潰時 F/Fmsy 會極大，限制顯示範圍
     L.shapes = [hline(1, g[0]), hline(1, g[1])];
     L.annotations = ['預測：相對生物量', '預測：相對漁獲死亡率'].map((t, k) => ({ text: '<b>' + t + '</b>', xref: g[k].x + ' domain', yref: g[k].y + ' domain', x: 0.5, y: 1.1, showarrow: false }));

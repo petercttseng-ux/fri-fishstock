@@ -49,7 +49,7 @@
       return Math.pow(Number.isFinite(s) && s !== null ? s : 0.3, 2) + fixed * fixed;
     }));
     I.forEach((col, i) => { if (col.filter(Number.isFinite).length < 3) throw new Error(`指標「${names[i]}」有效觀測值少於 3 筆。`); });
-    const maxC = Math.max(...C);
+    const maxC = U.max(C);
     let lr, sdr;
     if (o.rDist === 'range') { lr = (Math.log(o.rPrior[0]) + Math.log(o.rPrior[1])) / 2; sdr = Math.abs(lr - Math.log(o.rPrior[0])) / 2; }
     else { lr = Math.log(o.rPrior[0]); sdr = o.rPrior[1]; }
@@ -222,7 +222,7 @@
   };
   S.rhat = function (chains) {                   // Gelman–Rubin（未分割）
     const m = chains.length; if (m < 2) return NaN;
-    const n = Math.min(...chains.map(c => c.length));
+    const n = U.min(chains.map(c => c.length));
     const means = chains.map(c => U.mean(c.slice(0, n))), vars = chains.map(c => U.variance(c.slice(0, n)));
     const W = U.mean(vars), B = n * U.variance(means);
     return Math.sqrt(((n - 1) / n * W + B / n) / W);
@@ -230,7 +230,7 @@
 
   // ---------------------------------------------------------------- 摘要
   S.summarize = function (D, chains, mc) {
-    const draws = [].concat(...chains.map(c => c.draws)), N = D.N, m = D.m, nI = D.nI;
+    const draws = U.flat(chains.map(c => c.draws)), N = D.N, m = D.m, nI = D.nI;
     const q3 = a => { const v = U.q3(a); return { lci: v[0], mu: v[1], uci: v[2] }; };
     const K = draws.map(d => d.K), r = draws.map(d => d.r);
     const Hmsy = draws.map(d => d.r / (m - 1) * (1 - 1 / m)), SBmsyK = Math.pow(m, -1 / (m - 1));
@@ -241,7 +241,7 @@
       const B = draws.map(d => d.P[t] * d.K), H = B.map(b => D.C[t] / b);
       const BB = draws.map((d, i) => d.P[t] * d.K / SBmsy[i]), FF = H.map((h, i) => h / Hmsy[i]);
       ts.B.push(q3(B)); ts.H.push(q3(H)); ts.BBmsy.push(q3(BB)); ts.FFmsy.push(q3(FF)); ts.P.push(q3(draws.map(d => d.P[t])));
-      if (t === N - 1) { bbLast.push(...BB); ffLast.push(...FF); }
+      if (t === N - 1) { U.pushAll(bbLast, BB); U.pushAll(ffLast, FF); }
     }
     const y0 = D.years[0], y1 = D.years[N - 1];
     const est = {
@@ -267,7 +267,7 @@
     const stats = { N: Nobs, p: npar, DF, SDNR: U.round(Math.sqrt(ssst / (Nobs - 1)), 2), RMSE: U.round(100 * Math.sqrt(ssr / DF), 1) };
     // 收斂
     const conv = ['K', 'r'].map(nm => {
-      const stack = [].concat(...chains.map(c => c.draws.map(d => Math.log(d[nm]))));
+      const stack = U.flat(chains.map(c => c.draws.map(d => Math.log(d[nm]))));
       const g = S.geweke(stack), h = S.heidel(stack), rh = S.rhat(chains.map(c => c.draws.map(d => Math.log(d[nm]))));
       return { name: nm, mu: U.median(nm === 'K' ? K : r), geweke: g.p, heidel: h.p, rhat: rh };
     });
@@ -278,7 +278,13 @@
   };
 
   /** 單一鏈（供 Web Worker 平行執行） */
+  /** 保存之事後抽樣總數上限約 20,000 組（避免長鏈耗盡瀏覽器記憶體），超過時自動加大抽稀間隔 */
+  S.effectiveMC = function (mc) {
+    const nc = mc.nc || 1, keep = Math.ceil((mc.ni - mc.nb) / mc.nt) * nc;
+    return keep <= 20000 ? mc : Object.assign({}, mc, { nt: Math.ceil((mc.ni - mc.nb) * nc / 20000), ntUser: mc.nt });
+  };
   S.chain = function (o, mc, c, initFrom, onProgress) {
+    mc = S.effectiveMC(mc);
     const D = S.prepare(o);
     const rng = U.rng(1000 + 7919 * c + (mc.seed || 0));
     const init = initFrom ? Object.assign({}, initFrom) :
@@ -286,6 +292,7 @@
     return runChain(D, mc, 12345 + 101 * c + (mc.seed || 0), init, onProgress);
   };
   S.fromChains = function (o, mc, chains) {
+    mc = S.effectiveMC(mc);
     const D = S.prepare(o);
     const fit = S.summarize(D, chains, mc);
     fit.final = chains[0].final; fit.input = o;
@@ -342,7 +349,7 @@
   };
   S.mase = function (hc) {
     const ref = hc[0], N = ref.yr.length, D = ref._D, peels = hc.slice(1).map(h => h.peel);
-    const maxp = Math.max(...peels);
+    const maxp = U.max(peels);
     const rows = []; let allP = [], allN = [];
     D.names.forEach((nm, i) => {
       const obs = D.I[i];

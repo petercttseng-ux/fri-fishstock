@@ -19,7 +19,7 @@
   }
 
   FS.cmsyBkDefault = function (year, catch_, rr) {
-    const ct = ksmooth(year, catch_, 3), maxc = Math.max(...ct), ct3 = U.mean(ct.slice(0, 3));
+    const ct = ksmooth(year, catch_, 3), maxc = U.max(ct), ct3 = U.mean(ct.slice(0, 3));
     let start = year[0] < 1960 ? [0.5, 0.9] : (ct3 < 0.33 * maxc ? [0.5, 0.9] : [0.2, 0.6]);
     if (year[0] >= 1980 && rr[1] > 0.3 && ct3 < 0.33 * maxc) start = [0.2, 0.6];
     const endr = ct[ct.length - 1] / maxc;
@@ -36,7 +36,7 @@
     o.year.forEach((y, i) => { if (Number.isFinite(o.catch[i])) { year.push(y); C.push(o.catch[i]); } });
     const ny = year.length;
     if (ny < 10) throw new Error('漁獲量時間序列太短（少於 10 年）。');
-    const maxc = Math.max(...C), rr = o.r_range;
+    const maxc = U.max(C), rr = o.r_range;
     let kr = o.k_range;
     if (!kr) { kr = [maxc / rr[1], 4 * maxc / rr[0]]; if (o.bk_end[1] <= 0.5) kr[0] = Math.max(kr[0], 2 * maxc / rr[1]); }
     const r = new Float64Array(n), k = new Float64Array(n);
