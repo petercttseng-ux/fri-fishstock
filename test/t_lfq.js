@@ -1,0 +1,16 @@
+const FS = require('./load')('util.js', 'lfq.js', 'cmsy.js'); const fs = require('fs'); const U = FS.util, L = FS.lfq;
+const tab = U.parseCSV(U.decodeText(fs.readFileSync(require('path').join(__dirname, '../data/') + 'example_lfq.csv')));
+const l = L.build(tab, 'date', 'length_cm', 'freq', 2);
+console.log('nL', l.midLengths.length, 'nT', l.dates.length, 'raw', l.raw_n, 'mid0', l.midLengths[0]);
+const lr = L.restructure(l, 7);
+console.log('ASP', lr.ASP.toFixed(6));
+for (const p of [[120, 0.2, 0.3], [135, 0.35, 0.7], [150, 0.6, 0.1]]) console.log('Rn', p.join(','), L.score(lr, { Linf: p[0], K: p[1], t_anchor: p[2] }).toFixed(6));
+let t0 = Date.now(); const e = L.elefan(l, { MA: 7, Linf_range: [100, 160], K_range: [0.1, 1], popSize: 60, maxiter: 60 });
+console.log('elefan', Date.now() - t0, 'ms', JSON.stringify(e.par), e.Rn_max.toFixed(4));
+const cc = L.catchCurve(l, 120, 0.2, 0.25); console.log('cc Z', cc.Z.toFixed(5), 'se', cc.se.toFixed(5), 'L50', cc.L50.toFixed(3), 'reg', cc.reg_int);
+console.log('M', JSON.stringify(L.mEmpirical(120, 0.2, 25, 15, false)));
+console.log('ind', JSON.stringify(L.indicators(l, 120, 0.2, 0.25, 90).table.map(r => r.數值)));
+const cd = U.parseCSV(U.decodeText(fs.readFileSync(require('path').join(__dirname, '../data/') + 'example_catch_cpue.csv')));
+const rr = FS.cmsyRRange('中'); const bk = FS.cmsyBkDefault(cd.cols.year, cd.cols.catch, rr); console.log('bk', JSON.stringify(bk));
+t0 = Date.now(); const cm = FS.cmsyRun({ year: cd.cols.year, catch: cd.cols.catch, r_range: rr, bk_start: bk.start, bk_end: bk.end, n: 30000 });
+console.log('cmsy', Date.now() - t0, 'ms viable', cm.n_viable, JSON.stringify(cm.est.map(r => [r.參數, r.中位數])));

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FRI-FishStock 漁業資源評估系統（網頁版）</title>
+<meta name="description" content="農業部水產試驗所 FRI-FishStock 漁業資源評估系統網頁版：CPUE 標準化、體長頻度分析、CMSY、貝氏剩餘生產量模型、診斷檢核、風險表與中文評估報告。所有運算於瀏覽器內完成，資料不會上傳。">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="vendor/bootstrap.min.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<nav class="navbar navbar-expand-xl navbar-dark fs-nav sticky-top">
+  <div class="container-fluid">
+    <span class="navbar-brand"><b>FRI-FishStock</b> 漁業資源評估系統 <span class="badge bg-light text-primary ms-1 align-middle">網頁版</span></span>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-label="選單"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="navMain">
+      <ul class="navbar-nav me-auto" role="tablist">
+        <li class="nav-item"><a class="nav-link active" data-page="home" href="#home">① 首頁</a></li>
+        <li class="nav-item"><a class="nav-link" data-page="cpue" href="#cpue">② CPUE 標準化</a></li>
+        <li class="nav-item"><a class="nav-link" data-page="lfq" href="#lfq">③ 體長頻度分析</a></li>
+        <li class="nav-item"><a class="nav-link" data-page="cmsy" href="#cmsy">④ 漁獲量模型</a></li>
+        <li class="nav-item"><a class="nav-link" data-page="spm" href="#spm">⑤ 生物量模型（JABBA 架構）</a></li>
+        <li class="nav-item"><a class="nav-link" data-page="about" href="#about">關於</a></li>
+      </ul>
+      <span class="navbar-text small">農業部水產試驗所</span>
+    </div>
+  </div>
+</nav>
+
+<main class="container-fluid py-3">
+<!-- ================================================================ 首頁 -->
+<section class="page" id="page-home">
+  <div class="row g-3">
+    <div class="col-lg-7">
+      <div class="card h-100"><div class="card-header">系統簡介</div><div class="card-body">
+        <p>本系統提供圖形化中文介面，讓不熟悉程式語言的研究人員也能完成常用的漁業資源評估流程，並可產出中文漁業資源評估報告（PDF）。</p>
+        <div class="alert alert-success py-2"><b>資料不會離開您的電腦：</b>所有運算皆在瀏覽器內執行，上傳的檔案不會傳送至任何伺服器。</div>
+        <p>建議流程：先依手上資料選擇方法（右表），每項分析都要檢查診斷結果，再解讀資源狀態。</p>
+        <ol>
+          <li>② CPUE 標準化：由原始作業日誌產出年別豐度指標，可直接送入 ⑤ 生物量模型。</li>
+          <li>③ 體長頻度分析：估計成長參數、死亡率、開發率與體長指標。</li>
+          <li>④ 漁獲量模型：只有漁獲量時之初步評估（CMSY）。</li>
+          <li>⑤ 生物量模型：依 JABBA 模型架構之貝氏狀態空間剩餘生產量模型，含診斷檢核表、Kobe 圖與漁獲量決策風險表。</li>
+        </ol>
+        <p>每個分析結果區皆有綠色 <b>「生成評估報告（PDF）」</b> 按鈕，可依農業部水產試驗所格式產出中文報告。</p>
+        <div class="alert alert-warning mb-0">提醒：模型結果僅供科學研究與管理參考，正式評估須經同儕審查；各分頁之診斷未通過時，不宜據以作成管理結論。</div>
+      </div></div>
+    </div>
+    <div class="col-lg-5">
+      <div class="card h-100"><div class="card-header">依資料情況選擇方法</div><div class="card-body"><div id="guide"></div></div>
+        <div class="card-footer"><b>範例資料（模擬資料，非真實漁業資料）：</b>
+          <div class="mt-2 d-flex flex-wrap gap-2">
+            <a class="btn btn-sm btn-outline-secondary" href="data/example_logbook.csv" download="範例_作業日誌.csv">作業日誌</a>
+            <a class="btn btn-sm btn-outline-secondary" href="data/example_lfq.csv" download="範例_體長頻度.csv">體長頻度</a>
+            <a class="btn btn-sm btn-outline-secondary" href="data/example_catch_cpue.csv" download="範例_漁獲量與CPUE指標.csv">漁獲量與 CPUE</a>
+            <a class="btn btn-sm btn-outline-secondary" href="data/example_cpue_se.csv" download="範例_CPUE標準誤.csv">CPUE 標準誤</a>
+            <a class="btn btn-sm btn-outline-primary" href="docs/使用手冊.pdf" target="_blank" rel="noopener">使用手冊（桌面版，操作流程相同）</a>
+          </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ CPUE -->
+<section class="page d-none" id="page-cpue">
+  <div class="row g-3">
+    <aside class="col-lg-3"><div class="sidebar">
+      <h6>設定</h6>
+      <label class="form-label">上傳作業資料（CSV／Excel）</label>
+      <input class="form-control form-control-sm" type="file" id="cp_file" accept=".csv,.xlsx,.xls">
+      <a href="#" class="small d-inline-block mt-1" id="cp_demo">或載入範例資料</a>
+      <div id="cp_cols" class="mt-2"></div>
+      <label class="form-label mt-2">模型</label>
+      <div class="form-check"><input class="form-check-input" type="radio" name="cp_method" id="cp_m1" value="lognormal" checked><label class="form-check-label" for="cp_m1">對數常態 GLM</label></div>
+      <div class="form-check"><input class="form-check-input" type="radio" name="cp_method" id="cp_m2" value="delta"><label class="form-check-label" for="cp_m2">Delta 對數常態 GLM（零值多時）</label></div>
+      <label class="form-label mt-2" for="cp_nsim">信賴區間模擬次數</label>
+      <input class="form-control form-control-sm" type="number" id="cp_nsim" value="1000" min="200" max="5000" step="100">
+      <button class="btn btn-primary w-100 mt-3" id="cp_run">執行標準化</button>
+      <hr><button class="btn btn-outline-success w-100" id="cp_send">將標準化指標送至 ⑤ 生物量模型</button>
+    </div></aside>
+    <div class="col-lg-9">
+      <div class="card"><div class="card-header p-0 border-0"><ul class="nav nav-tabs card-header-tabs m-0 px-2 pt-2" data-tabs="cp">
+        <li class="nav-item"><a class="nav-link active" data-tab="cp-idx" href="#">標準化指標</a></li>
+        <li class="nav-item"><a class="nav-link" data-tab="cp-anova" href="#">模型與 ANOVA</a></li>
+        <li class="nav-item"><a class="nav-link" data-tab="cp-step" href="#">因子貢獻</a></li>
+        <li class="nav-item"><a class="nav-link" data-tab="cp-resid" href="#">殘差診斷</a></li>
+        <li class="nav-item"><a class="nav-link" data-tab="cp-prev" href="#">資料預覽</a></li></ul></div>
+        <div class="card-body">
+          <div class="tabpane" id="cp-idx"><div id="cp_note"></div><div class="plot" id="cp_plot" style="height:460px"></div>
+            <div class="btnrow"><button class="btn btn-sm btn-outline-secondary" id="cp_dl">下載結果（Excel）</button><button class="btn btn-sm btn-success rep-btn" data-mod="cp">生成評估報告（PDF）</button></div>
+            <div id="cp_index"></div></div>
+          <div class="tabpane d-none" id="cp-anova"><div class="row g-3"><div class="col-md-4"><div class="card"><div class="card-header">模型摘要</div><div class="card-body" id="cp_stats"></div></div></div>
+            <div class="col-md-8"><div class="card"><div class="card-header">各變數顯著性（逐項移除檢定）</div><div class="card-body" id="cp_anova"></div></div></div></div></div>
+          <div class="tabpane d-none" id="cp-step"><p>依序加入各變數後之 AIC 與解釋變異（R²）變化，用以判斷各變數的重要性；R² 增量小於約 1% 之變數可考慮刪除。</p><div id="cp_step"></div></div>
+          <div class="tabpane d-none" id="cp-resid"><div class="plot" id="cp_resid" style="height:380px"></div><p class="text-muted">殘差應大致對稱、Q-Q 圖接近直線、殘差與配適值無明顯型態。</p></div>
+          <div class="tabpane d-none" id="cp-prev"><div id="cp_preview"></div></div>
+        </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ 體長 -->
+<section class="page d-none" id="page-lfq">
+  <div class="row g-3">
+    <aside class="col-lg-3"><div class="sidebar">
+      <h6>設定</h6>
+      <label class="form-label">上傳體長資料（CSV／Excel）</label>
+      <input class="form-control form-control-sm" type="file" id="lf_file" accept=".csv,.xlsx,.xls">
+      <a href="#" class="small d-inline-block mt-1" id="lf_demo">或載入範例資料</a>
+      <div id="lf_cols" class="mt-2"></div>
+      <div class="row g-2 mt-1">
+        <div class="col-6"><label class="form-label" for="lf_bin">體長組距（cm）</label><input class="form-control form-control-sm" type="number" id="lf_bin" value="1" min="0.1" step="0.5"></div>
+        <div class="col-6"><label class="form-label" for="lf_ma">移動平均 MA（奇數）</label><input class="form-control form-control-sm" type="number" id="lf_ma" value="5" min="3" max="15" step="2"></div>
+        <div class="col-6"><label class="form-label">L∞ 下限</label><input class="form-control form-control-sm" type="number" id="lf_linf0" value="30"></div>
+        <div class="col-6"><label class="form-label">L∞ 上限</label><input class="form-control form-control-sm" type="number" id="lf_linf1" value="60"></div>
+        <div class="col-6"><label class="form-label">K 下限（年⁻¹）</label><input class="form-control form-control-sm" type="number" id="lf_k0" value="0.1" step="0.01"></div>
+        <div class="col-6"><label class="form-label">K 上限（年⁻¹）</label><input class="form-control form-control-sm" type="number" id="lf_k1" value="1.2" step="0.01"></div>
+        <div class="col-6"><label class="form-label">族群大小</label><input class="form-control form-control-sm" type="number" id="lf_pop" value="60" min="20" max="200"></div>
+        <div class="col-6"><label class="form-label">世代數</label><input class="form-control form-control-sm" type="number" id="lf_iter" value="60" min="20" max="300"></div>
+      </div>
+      <button class="btn btn-primary w-100 mt-2" id="lf_run">執行 ELEFAN</button>
+      <label class="form-label mt-2" for="lf_nboot">Bootstrap 次數</label><input class="form-control form-control-sm" type="number" id="lf_nboot" value="20" min="5" max="500">
+      <button class="btn btn-outline-primary w-100 mt-2" id="lf_boot">執行 Bootstrap（較耗時）</button>
+      <hr><b>死亡率與指標</b>
+      <div class="row g-2 mt-1">
+        <div class="col-6"><label class="form-label">年均水溫（°C）</label><input class="form-control form-control-sm" type="number" id="lf_temp" value="25"></div>
+        <div class="col-6"><label class="form-label">最大年齡（可空白）</label><input class="form-control form-control-sm" type="number" id="lf_tmax"></div>
+        <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" id="lf_school"><label class="form-check-label" for="lf_school">群游性魚種（Pauly 式 ×0.8）</label></div></div>
+        <div class="col-12"><label class="form-label">50% 性成熟體長 Lm50（可空白）</label><input class="form-control form-control-sm" type="number" id="lf_lm50"></div>
+        <div class="col-12"><label class="form-label">採用之 M</label><select class="form-select form-select-sm" id="lf_msel"><option value="0">Then 成長參數式</option><option value="1">Pauly 式</option><option value="2">Then 最大年齡式</option></select></div>
+        <div class="col-12"><label class="form-label">漁獲曲線迴歸區間（體長組序號，如 10,25；空白 = 自動）</label><input class="form-control form-control-sm" type="text" id="lf_reg"></div>
+      </div>
+      <button class="btn btn-primary w-100 mt-2" id="lf_mort">計算死亡率與開發率</button>
+    </div></aside>
+    <div class="col-lg-9">
+      <div class="card"><div class="card-header p-0 border-0"><ul class="nav nav-tabs card-header-tabs m-0 px-2 pt-2" data-tabs="lf">
+        <li class="nav-item"><a class="nav-link active" data-tab="lf-raw" href="#">體長頻度</a></li>
+        <li class="nav-item"><a class="nav-link" data-tab="lf-par" href="#">成長參數（ELEFAN）</a></li>
+        <li class="nav-item"><a class="nav-link" data-tab="lf-boot" href="#">不確定性（Bootstrap）</a></li>
+        <li class="nav-item"><a class="nav-link" data-tab="lf-mort" href="#">死亡率與開發率</a></li>
+        <li class="nav-item"><a class="nav-link" data-tab="lf-ind" href="#">體長指標</a></li></ul></div>
+        <div class="card-body">
+          <div class="tabpane" id="lf-raw"><div class="plot" id="lf_rawplot" style="height:480px"></div><div id="lf_samples"></div></div>
+          <div class="tabpane d-none" id="lf-par"><div id="lf_parbox"></div><div class="plot" id="lf_fit" style="height:520px"></div></div>
+          <div class="tabpane d-none" id="lf-boot"><div class="plot" id="lf_bplot" style="height:360px"></div><div id="lf_btab"></div></div>
+          <div class="tabpane d-none" id="lf-mort"><div class="row g-3"><div class="col-md-5"><div class="card"><div class="card-header">估計結果</div><div class="card-body" id="lf_mtab"></div></div></div>
+            <div class="col-md-7"><div class="plot" id="lf_cc" style="height:430px"></div></div></div></div>
+          <div class="tabpane d-none" id="lf-ind"><div id="lf_ind"></div><p class="text-muted">P_opt、P_mega、P_mat 為 Froese (2004) 建議之簡易體長指標，用以判斷是否捕撈過多幼魚或大型魚。</p>
+            <div class="btnrow"><button class="btn btn-sm btn-outline-secondary" id="lf_dl">下載結果（Excel）</button><button class="btn btn-sm btn-success rep-btn" data-mod="lf">生成評估報告（PDF）</button></div></div>
+        </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ CMSY -->
+<section class="page d-none" id="page-cmsy">
+  <div class="row g-3">
+    <aside class="col-lg-3"><div class="sidebar">
+      <h6>設定</h6>
+      <label class="form-label">上傳漁獲量資料（需含年、漁獲量欄）</label>
+      <input class="form-control form-control-sm" type="file" id="cm_file" accept=".csv,.xlsx,.xls">
+      <a href="#" class="small d-inline-block mt-1" id="cm_demo">或載入範例資料</a>
+      <div id="cm_cols" class="mt-2"></div>
+      <label class="form-label mt-2">韌性類別（FishBase）</label>
+      <select class="form-select form-select-sm" id="cm_res"><option>高</option><option selected>中</option><option>低</option><option>極低</option></select>
+      <div class="row g-2 mt-1">
+        <div class="col-6"><label class="form-label">r 下限</label><input class="form-control form-control-sm" type="number" id="cm_r0" step="0.01"></div>
+        <div class="col-6"><label class="form-label">r 上限</label><input class="form-control form-control-sm" type="number" id="cm_r1" step="0.01"></div>
+        <div class="col-6"><label class="form-label" id="cm_sbk_lab">起始年 B/k 下限</label><input class="form-control form-control-sm" type="number" id="cm_sbk0" step="0.05"></div>
+        <div class="col-6"><label class="form-label">起始年 B/k 上限</label><input class="form-control form-control-sm" type="number" id="cm_sbk1" step="0.05"></div>
+        <div class="col-6"><label class="form-label" id="cm_ebk_lab">末年 B/k 下限</label><input class="form-control form-control-sm" type="number" id="cm_ebk0" step="0.05"></div>
+        <div class="col-6"><label class="form-label">末年 B/k 上限</label><input class="form-control form-control-sm" type="number" id="cm_ebk1" step="0.05"></div>
+      </div>
+      <p class="text-muted small mt-1 mb-1">預設值依漁獲量型態之經驗法則產生，請依專家知識調整。</p>
+      <div class="form-check"><input class="form-check-input" type="checkbox" id="cm_useint"><label class="form-check-label" for="cm_useint">設定中間年 B/k 先驗</label></div>
+      <div class="row g-2 d-none" id="cm_intbox">
+        <div class="col-4"><label class="form-label">年份</label><input class="form-control form-control-sm" type="number" id="cm_iyr"></div>
+        <div class="col-4"><label class="form-label">B/k 下限</label><input class="form-control form-control-sm" type="number" id="cm_ibk0" value="0.2" step="0.05"></div>
+        <div class="col-4"><label class="form-label">B/k 上限</label><input class="form-control form-control-sm" type="number" id="cm_ibk1" value="0.6" step="0.05"></div>
+      </div>
+      <label class="form-label mt-2" for="cm_n">抽樣組數</label><input class="form-control form-control-sm" type="number" id="cm_n" value="30000" min="5000" max="200000" step="5000">
+      <button class="btn btn-primary w-100 mt-3" id="cm_run">執行 CMSY</button>
+    </div></aside>
+    <div class="col-lg-9">
+      <div class="card"><div class="card-header p-0 border-0"><ul class="nav nav-tabs card-header-tabs m-0 px-2 pt-2" data-tabs="cm">
+        <li class="nav-item"><a class="nav-link active" data-tab="cm-est" href="#">估計結果</a></li>
+        <li class="nav-item"><a class="nav-link" data-tab="cm-rk" href="#">r–k 分布</a></li>
+        <li class="nav-item"><a class="nav-link" data-tab="cm-traj" href="#">資源狀態趨勢</a></li>
+        <li class="nav-item"><a class="nav-link" data-tab="cm-kobe" href="#">Kobe 圖</a></li></ul></div>
+        <div class="card-body">
+          <div class="tabpane" id="cm-est"><div class="alert alert-info py-2">CMSY 只用漁獲量，結果高度依賴先驗設定，僅適合作為初步判斷；有 CPUE 時請以 ⑤ 生物量模型為主。</div>
+            <div id="cm_est"></div><div class="plot" id="cm_catch" style="height:360px"></div>
+            <div class="btnrow"><button class="btn btn-sm btn-outline-secondary" id="cm_dl">下載結果（Excel）</button><button class="btn btn-sm btn-success rep-btn" data-mod="cm">生成評估報告（PDF）</button></div></div>
+          <div class="tabpane d-none" id="cm-rk"><div class="plot" id="cm_rk" style="height:480px"></div></div>
+          <div class="tabpane d-none" id="cm-traj"><div class="plot" id="cm_traj" style="height:420px"></div></div>
+          <div class="tabpane d-none" id="cm-kobe"><div class="plot" id="cm_kobe" style="height:540px;max-width:720px"></div></div>
+        </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ 貝氏剩餘生產量模型 -->
+<section class="page d-none" id="page-spm">
+  <div class="row g-3">
+    <aside class="col-lg-3"><div class="sidebar">
+      <h6>設定</h6>
+      <label class="form-label">上傳漁獲量與指標（年、漁獲量、指標…）</label>
+      <input class="form-control form-control-sm" type="file" id="jb_file" accept=".csv,.xlsx,.xls">
+      <a href="#" class="small d-inline-block mt-1" id="jb_demo">或載入範例資料</a>
+      <div id="jb_cols" class="mt-2"></div>
+      <label class="form-label mt-2">指標觀測誤差</label>
+      <div class="form-check"><input class="form-check-input" type="radio" name="jb_semode" id="jb_se1" value="cv" checked><label class="form-check-label" for="jb_se1">固定 CV</label></div>
+      <div class="form-check"><input class="form-check-input" type="radio" name="jb_semode" id="jb_se2" value="file"><label class="form-check-label" for="jb_se2">上傳標準誤檔（log 尺度 SE）</label></div>
+      <div id="jb_cvbox"><input class="form-control form-control-sm" type="number" id="jb_cv" value="0.2" min="0.01" max="1" step="0.05"></div>
+      <div id="jb_sebox" class="d-none"><input class="form-control form-control-sm" type="file" id="jb_sefile" accept=".csv,.xlsx,.xls"><div class="small text-muted" id="jb_sestat">欄位需與指標同名</div></div>
+      <label class="form-label mt-2">剩餘生產量模型</label>
+      <select class="form-select form-select-sm" id="jb_model"><option value="Schaefer">Schaefer</option><option value="Fox">Fox</option><option value="Pella">Pella-Tomlinson（Bmsy/K = 0.4）</option></select>
+      <div class="mt-2"><b>先驗設定</b></div>
+      <div class="form-check"><input class="form-check-input" type="radio" name="jb_rmode" id="jb_r1" value="range" checked><label class="form-check-label" for="jb_r1">r：依韌性類別（範圍）</label></div>
+      <div class="form-check"><input class="form-check-input" type="radio" name="jb_rmode" id="jb_r2" value="lnorm"><label class="form-check-label" for="jb_r2">r：自訂（平均、log SD）</label></div>
+      <div id="jb_rres_box"><select class="form-select form-select-sm" id="jb_rres"><option>高</option><option selected>中</option><option>低</option><option>極低</option></select></div>
+      <div id="jb_rln_box" class="row g-2 d-none"><div class="col-6"><input class="form-control form-control-sm" type="number" id="jb_rmu" value="0.3" step="0.05" title="平均"></div><div class="col-6"><input class="form-control form-control-sm" type="number" id="jb_rsd" value="0.5" step="0.05" title="log SD"></div></div>
+      <div class="form-check mt-1"><input class="form-check-input" type="checkbox" id="jb_kcustom"><label class="form-check-label" for="jb_kcustom">自訂 K 先驗（否則為 8 × 最大漁獲量，CV 1）</label></div>
+      <div id="jb_kbox" class="row g-2 d-none"><div class="col-6"><input class="form-control form-control-sm" type="number" id="jb_kmu" placeholder="K 平均"></div><div class="col-6"><input class="form-control form-control-sm" type="number" id="jb_kcv" value="1" step="0.1" title="CV"></div></div>
+      <div class="row g-2 mt-1"><div class="col-6"><label class="form-label">起始 B/K 平均</label><input class="form-control form-control-sm" type="number" id="jb_psimu" value="0.9" step="0.05"></div>
+        <div class="col-6"><label class="form-label">CV</label><input class="form-control form-control-sm" type="number" id="jb_psicv" value="0.25" step="0.05"></div></div>
+      <div class="mt-2"><b>MCMC 設定</b></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" id="jb_quick" checked><label class="form-check-label" for="jb_quick">快速試算（正式評估請取消）</label></div>
+      <div id="jb_mcbox" class="row g-2 d-none">
+        <div class="col-6"><label class="form-label">疊代數</label><input class="form-control form-control-sm" type="number" id="jb_ni" value="30000" step="5000"></div>
+        <div class="col-6"><label class="form-label">燒入期</label><input class="form-control form-control-sm" type="number" id="jb_nb" value="5000" step="1000"></div>
+        <div class="col-6"><label class="form-label">抽稀</label><input class="form-control form-control-sm" type="number" id="jb_nt" value="5" min="1"></div>
+        <div class="col-6"><label class="form-label">鏈數</label><input class="form-control form-control-sm" type="number" id="jb_nc" value="2" min="1" max="4"></div></div>
+      <label class="form-label mt-2">回溯分析年數（0 = 不執行）</label><input class="form-control form-control-sm" type="number" id="jb_peels" value="5" min="0" max="10">
+      <label class="form-label mt-2">生活史（回溯 ρ 判定門檻）</label>
+      <div class="form-check"><input class="form-check-input" type="radio" name="jb_life" id="jb_l1" value="long" checked><label class="form-check-label" for="jb_l1">長壽命（−0.15～0.20）</label></div>
+      <div class="form-check"><input class="form-check-input" type="radio" name="jb_life" id="jb_l2" value="short"><label class="form-check-label" for="jb_l2">短壽命（−0.22～0.30）</label></div>
+      <button class="btn btn-primary w-100 mt-3" id="jb_run">執行評估</button>
+    </div></aside>
+    <div class="col-lg-9">
+      <div class="card"><div class="card-header p-0 border-0"><ul class="nav nav-tabs card-header-tabs m-0 px-2 pt-2" data-tabs="jb">
+        <li class="nav-item"><a class="nav-link active" data-tab="jb-est" href="#">估計結果</a></li>
+        <li class="nav-item"><a class="nav-link" data-tab="jb-diag" href="#">診斷檢核表</a></li>
+        <li class="nav-item"><a class="nav-link" data-tab="jb-fit" href="#">指標配適</a></li>
+        <li class="nav-item"><a class="nav-link" data-tab="jb-res" href="#">殘差</a></li>
+        <li class="nav-item"><a class="nav-link" data-tab="jb-pp" href="#">先驗與後驗</a></li>
+        <li class="nav-item"><a class="nav-link" data-tab="jb-trj" href="#">資源趨勢</a></li>
+        <li class="nav-item"><a class="nav-link" data-tab="jb-kobe" href="#">Kobe 圖</a></li>
+        <li class="nav-item"><a class="nav-link" data-tab="jb-retro" href="#">回溯與預測能力</a></li>
+        <li class="nav-item"><a class="nav-link" data-tab="jb-prj" href="#">漁獲量情境與風險</a></li></ul></div>
+        <div class="card-body">
+          <div class="tabpane" id="jb-est"><div class="alert alert-secondary small py-2">本頁之模型依 JABBA（Winker et al. 2018）公開之模型結構、先驗與診斷標準，以 JavaScript 於瀏覽器內重新實作（MCMC 以 Metropolis-within-Gibbs 取代 JAGS），<b>非 JABBA 原套件</b>；以範例資料與 R 版 JABBA 比對，主要估計值差異約 1–2%（詳「關於」頁）。</div>
+            <div id="jb_status"></div><div id="jb_est"></div>
+            <div class="btnrow"><button class="btn btn-sm btn-outline-secondary" id="jb_dl">下載結果（Excel）</button><button class="btn btn-sm btn-success rep-btn" data-mod="spm">生成評估報告（PDF）</button></div></div>
+          <div class="tabpane d-none" id="jb-diag"><p>依公開文獻之診斷標準逐項檢核；「未通過」項目應先調整模型設定，再解讀資源狀態。</p><div id="jb_diag"></div></div>
+          <div class="tabpane d-none" id="jb-fit"><div class="plot" id="jb_fits" style="height:560px"></div></div>
+          <div class="tabpane d-none" id="jb-res"><div class="plot" id="jb_resid" style="height:400px"></div><div class="plot" id="jb_runs" style="height:420px"></div>
+            <p class="text-muted small">runs test：陰影為 3σ 管制界限，綠色表示殘差隨機（p > 0.05），紅色表示殘差有系統性型態；紅點為超出 3σ 之離群值。</p></div>
+          <div class="tabpane d-none" id="jb-pp"><div class="plot" id="jb_pp" style="height:400px"></div></div>
+          <div class="tabpane d-none" id="jb-trj"><div class="plot" id="jb_trj" style="height:600px"></div></div>
+          <div class="tabpane d-none" id="jb-kobe"><div class="row g-3"><div class="col-xl-6"><div class="plot" id="jb_kobe" style="height:540px"></div></div><div class="col-xl-6"><div class="plot" id="jb_phase" style="height:540px"></div></div></div></div>
+          <div class="tabpane d-none" id="jb-retro"><div class="plot" id="jb_retro" style="height:460px"></div><div class="plot" id="jb_hc" style="height:440px"></div></div>
+          <div class="tabpane d-none" id="jb-prj">
+            <div class="row g-2 align-items-end">
+              <div class="col-md-5"><label class="form-label">相對於近 3 年平均漁獲量之變化（%）</label><input class="form-control form-control-sm" id="jb_pct" value="-40,-30,-20,-10,0,10,20,30"></div>
+              <div class="col-md-3"><label class="form-label">預測年數</label><input class="form-control form-control-sm" type="number" id="jb_nyr" value="10" min="3" max="30"></div>
+              <div class="col-md-4"><button class="btn btn-primary" id="jb_prjrun">執行預測</button></div></div>
+            <div id="jb_prjnote" class="mt-2"></div><div class="plot" id="jb_prjplot" style="height:380px"></div>
+            <h6>各情境下「資源健康」（B ≥ Bmsy 且 F ≤ Fmsy）之機率</h6><div id="jb_pg"></div>
+            <h6 class="mt-3">B ≥ Bmsy 之機率</h6><div id="jb_pb"></div>
+            <h6 class="mt-3">F ≤ Fmsy 之機率</h6><div id="jb_pf"></div>
+            <div class="btnrow"><button class="btn btn-sm btn-outline-secondary" id="jb_prjdl">下載風險表（Excel）</button><button class="btn btn-sm btn-success rep-btn" data-mod="spm">生成評估報告（PDF）</button></div>
+          </div>
+        </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ 關於 -->
+<section class="page d-none" id="page-about"><div class="card"><div class="card-header" id="about_title">關於</div><div class="card-body about">
+  <h5>系統說明</h5>
+  <p>FRI-FishStock 網頁版為農業部水產試驗所 FRI-FishStock 漁業資源評估系統（R／Shiny 桌面版）之瀏覽器版本。所有運算以 JavaScript 於使用者瀏覽器內執行（Web Worker 平行運算），<b>資料不會上傳至任何伺服器</b>，亦不需安裝任何軟體。</p>
+  <h5>運算方法與來源</h5>
+  <table class="table table-sm"><thead><tr><th>模組</th><th>實作方式</th><th>方法出處</th></tr></thead><tbody>
+    <tr><td>CPUE 標準化</td><td>對數常態 GLM、Delta（二項 logit ＋ 對數常態）GLM；QR 分解最小平方、IRLS；以係數共變異矩陣多變量常態模擬求信賴區間（由桌面版 R 程式移植）</td><td>Maunder &amp; Punt (2004)；Lo et al. (1992)</td></tr>
+    <tr><td>體長頻度分析</td><td>ELEFAN 資料重整與成長曲線計分依 TropFishR（GPL-3）演算法移植；遺傳演算法比照 R 套件 GA 之實數型預設運算子；經驗式 M 與體長轉換漁獲曲線依 TropFishR</td><td>Mildenberger et al. (2017)；Pauly (1980)；Then et al. (2015)；Froese (2004)</td></tr>
+    <tr><td>CMSY</td><td>Schaefer 模型蒙地卡羅法（由桌面版 R 程式移植；非 CMSY++ 官方程式）</td><td>Froese et al. (2017)</td></tr>
+    <tr><td>貝氏剩餘生產量模型</td><td>依 JABBA 公開之模型結構（狀態空間 Pella-Tomlinson 族、對數常態過程與觀測誤差、先驗分布、軟懲罰項）重新實作；MCMC 以 Metropolis-within-Gibbs（適應性區塊更新、非中心化過程偏差、Gibbs 指標尺度）取代 JAGS。診斷：Geweke、Heidelberger–Welch（coda 演算法）、Gelman–Rubin R̂、runs test、RMSE、SDNR、Mohn's ρ、MASE</td><td>Winker et al. (2018)；Carvalho et al. (2021)；Hurtado-Ferro et al. (2015)；Kell et al. (2016)</td></tr>
+  </tbody></table>
+  <h5>與 R 版之比對驗證（範例資料）</h5>
+  <table class="table table-sm"><thead><tr><th>項目</th><th>網頁版</th><th>R 版</th></tr></thead><tbody id="about_valid"></tbody></table>
+  <p class="small text-muted">CPUE 標準化之模型統計、ANOVA 與因子貢獻與 R 完全一致；ELEFAN 資料重整（ASP）與計分（Rn）、漁獲曲線、經驗式 M、體長指標與 TropFishR 完全一致。隨機抽樣結果（信賴區間、MCMC、Bootstrap、CMSY）因亂數不同會有些微差異。</p>
+  <h5>授權與第三方元件</h5>
+  <p>本系統程式碼以 <b>GNU GPL 第 3 版</b>釋出。介面使用 Bootstrap（MIT）、Plotly.js（MIT）、SheetJS Community Edition（Apache-2.0）。演算法參考之開源套件：TropFishR（GPL-3）、JABBA（EUPL-1.2）、GA（GPL-2+）、coda（GPL-2+）；本系統為獨立撰寫之 JavaScript 實作，未包含上述套件之程式碼檔案。未使用、參考或檢視任何商業軟體之原始碼。</p>
+  <h5>免責聲明</h5>
+  <p>本軟體依現狀提供，不附任何明示或默示之保證。評估結果之解讀與管理建議，應由具資源評估專業之人員判斷，並經同儕審查。</p>
+  <p class="text-muted small mb-0" id="about_ver"></p>
+</div></div></section>
+</main>
+
+<!-- 進度 -->
+<div class="busy d-none" id="busy"><div class="busy-box"><div class="spinner-border text-primary" role="status"></div><div class="mt-2" id="busy_msg">計算中…</div>
+  <div class="progress mt-2" style="height:8px"><div class="progress-bar" id="busy_bar" style="width:0%"></div></div></div></div>
+<div class="toast-container position-fixed bottom-0 end-0 p-3" id="toasts"></div>
+
+<!-- 報告設定 -->
+<div class="modal fade" id="repModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title" id="rep_title">生成漁業資源評估報告（PDF）</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button></div>
+  <div class="modal-body">
+    <ul class="nav nav-tabs" data-tabs="rp"><li class="nav-item"><a class="nav-link active" data-tab="rp-basic" href="#">基本資料</a></li><li class="nav-item"><a class="nav-link" data-tab="rp-text" href="#">報告內文（選填）</a></li></ul>
+    <div class="tabpane pt-3" id="rp-basic">
+      <div class="row g-2">
+        <div class="col-md-6"><label class="form-label">魚種名稱（中文）</label><input class="form-control rp" id="rp_species" placeholder="例：太平洋黑鮪"></div>
+        <div class="col-md-6"><label class="form-label">海域／系群</label><input class="form-control rp" id="rp_area" placeholder="例：北太平洋"></div>
+        <div class="col-md-6"><label class="form-label">英文名</label><input class="form-control rp" id="rp_en" placeholder="Pacific bluefin tuna"></div>
+        <div class="col-md-6"><label class="form-label">學名</label><input class="form-control rp" id="rp_sci" placeholder="Thunnus orientalis"></div>
+        <div class="col-md-4"><label class="form-label">報告年度</label><input class="form-control rp" type="number" id="rp_year"></div>
+        <div class="col-md-4"><label class="form-label">漁獲量單位</label><input class="form-control rp" id="rp_unit" value="公噸"></div>
+        <div class="col-md-4"><label class="form-label">下次評估年</label><input class="form-control rp" id="rp_next"></div>
+        <div class="col-12"><label class="form-label">管理及相關機關（每行一個）</label><textarea class="form-control rp" id="rp_agency" rows="3" placeholder="例：中西太平洋漁業委員會（WCPFC）"></textarea></div>
+        <div class="col-12"><label class="form-label">執筆者（每行一筆：單位　姓名）</label><textarea class="form-control rp" id="rp_authors" rows="2"></textarea></div>
+        <div class="col-12" id="rp_others_box"></div>
+      </div>
+      <p class="text-muted small mt-2 mb-0">報告依農業部水產試驗所格式，參考日本水產廳「國際漁業資源の現況」之章節架構產製；資源狀態、將來預測、資源評估建議與摘要表由系統依分析結果自動撰寫。</p>
+    </div>
+    <div class="tabpane pt-3 d-none" id="rp-text">
+      <p class="text-muted small">各段空白時省略；「最近動態」空白時，系統依評估結果自動撰寫摘要。每行為一個段落。</p>
+      <label class="form-label">最近動態</label><textarea class="form-control rp mb-2" id="rp_recent" rows="3"></textarea>
+      <label class="form-label">利用及用途</label><textarea class="form-control rp mb-2" id="rp_use" rows="2"></textarea>
+      <label class="form-label">漁業概要（漁獲量圖表將自動附上）</label><textarea class="form-control rp mb-2" id="rp_fishery" rows="3"></textarea>
+      <label class="form-label">生物學特性（分布、回遊、成熟等；體長分析之成長與自然死亡將自動附上）</label><textarea class="form-control rp mb-2" id="rp_bio" rows="3"></textarea>
+      <label class="form-label">管理方策</label><textarea class="form-control rp mb-2" id="rp_mgmt" rows="3"></textarea>
+      <div class="row g-2"><div class="col-md-6"><label class="form-label">管理目標（摘要表）</label><textarea class="form-control rp" id="rp_target" rows="2"></textarea></div>
+        <div class="col-md-6"><label class="form-label">管理措施（摘要表）</label><textarea class="form-control rp" id="rp_measure" rows="2"></textarea></div></div>
+      <label class="form-label mt-2">其他參考文獻（每行一筆）</label><textarea class="form-control rp" id="rp_refs" rows="3"></textarea>
+    </div>
+  </div>
+  <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+    <button type="button" class="btn btn-outline-secondary" id="rep_html">下載 HTML 版</button>
+    <button type="button" class="btn btn-primary" id="rep_go">產生報告（開啟列印視窗）</button></div>
+</div></div></div>
+
+<script src="vendor/bootstrap.bundle.min.js"></script>
+<script src="vendor/plotly-basic.min.js"></script>
+<script src="vendor/xlsx.full.min.js"></script>
+<script src="js/core/util.js"></script>
+<script src="js/core/cpue.js"></script>
+<script src="js/core/lfq.js"></script>
+<script src="js/core/cmsy.js"></script>
+<script src="js/core/spm.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/report.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
