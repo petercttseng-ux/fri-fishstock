@@ -106,7 +106,7 @@
     setTimeout(() => document.querySelectorAll(`#page-${p} .plot[data-has]`).forEach(el => Plotly.Plots.resize(el)), 50);
   }
   document.querySelectorAll('[data-page]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); history.replaceState(null, '', '#' + a.dataset.page); showPage(a.dataset.page);
-    const c = document.querySelector('#navMain.show'); if (c) bootstrap.Collapse.getOrCreateInstance(c).hide(); }));
+    a.scrollIntoView({ block: 'nearest', inline: 'center' }); }));
   document.querySelectorAll('[data-tabs]').forEach(ul => ul.addEventListener('click', e => {
     const a = e.target.closest('[data-tab]'); if (!a) return; e.preventDefault();
     ul.querySelectorAll('[data-tab]').forEach(x => { x.classList.toggle('active', x === a); const p = $(x.dataset.tab); if (p) p.classList.toggle('d-none', x !== a); });
@@ -445,7 +445,7 @@
 
   // ======================================================================== 關於
   $('about_title').textContent = `${FS.APP_NAME} ${FS.APP_VERSION}`;
-  $('about_ver').textContent = `農業部水產試驗所｜版本 ${FS.APP_VERSION}｜運算執行緒 ${pool.size} 個`;
+  $('about_ver').textContent = `農業部水產試驗所 AI應用小組｜版本 ${FS.APP_VERSION}｜運算執行緒 ${pool.size} 個`;
   $('about_valid').innerHTML = [
     ['CPUE 標準化（Delta，6,000 筆）：調整後 R²、AIC、ANOVA F 值', '0.477、8953.3（ANOVA 完全相同）', '0.477、8953.3'],
     ['ELEFAN 計分 Rn（L∞ 120、K 0.2、t_anchor 0.3）', '0.189811', '0.189811（TropFishR）'],

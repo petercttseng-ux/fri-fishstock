@@ -10,21 +10,18 @@
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-<nav class="navbar navbar-expand-xl navbar-dark fs-nav sticky-top">
-  <div class="container-fluid">
+<nav class="navbar navbar-dark fs-nav sticky-top">
+  <div class="container-fluid fs-navwrap">
     <span class="navbar-brand"><b>FRI-FishStock</b> 漁業資源評估系統 <span class="badge bg-light text-primary ms-1 align-middle">網頁版</span></span>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-label="選單"><span class="navbar-toggler-icon"></span></button>
-    <div class="collapse navbar-collapse" id="navMain">
-      <ul class="navbar-nav me-auto" role="tablist">
-        <li class="nav-item"><a class="nav-link active" data-page="home" href="#home">① 首頁</a></li>
-        <li class="nav-item"><a class="nav-link" data-page="cpue" href="#cpue">② CPUE 標準化</a></li>
-        <li class="nav-item"><a class="nav-link" data-page="lfq" href="#lfq">③ 體長頻度分析</a></li>
-        <li class="nav-item"><a class="nav-link" data-page="cmsy" href="#cmsy">④ 漁獲量模型</a></li>
-        <li class="nav-item"><a class="nav-link" data-page="spm" href="#spm">⑤ 生物量模型（JABBA 架構）</a></li>
-        <li class="nav-item"><a class="nav-link" data-page="about" href="#about">關於</a></li>
-      </ul>
-      <span class="navbar-text small">農業部水產試驗所</span>
-    </div>
+    <ul class="nav fs-menu" role="tablist">
+      <li class="nav-item"><a class="nav-link active" data-page="home" href="#home">① 首頁</a></li>
+      <li class="nav-item"><a class="nav-link" data-page="cpue" href="#cpue">② CPUE 標準化</a></li>
+      <li class="nav-item"><a class="nav-link" data-page="lfq" href="#lfq">③ 體長頻度分析</a></li>
+      <li class="nav-item"><a class="nav-link" data-page="cmsy" href="#cmsy">④ 漁獲量模型</a></li>
+      <li class="nav-item"><a class="nav-link" data-page="spm" href="#spm">⑤ 生物量模型（JABBA 架構）</a></li>
+      <li class="nav-item"><a class="nav-link" data-page="about" href="#about">關於</a></li>
+    </ul>
+    <span class="navbar-text small fs-org">農業部水產試驗所 AI應用小組</span>
   </div>
 </nav>
 
@@ -298,6 +295,7 @@
   <p class="text-muted small mb-0" id="about_ver"></p>
 </div></div></section>
 </main>
+<footer class="fs-footer">© 2026 農業部水產試驗所 AI應用小組　｜　FRI-FishStock 漁業資源評估系統（網頁版）　｜　GNU GPL-3.0</footer>
 
 <!-- 進度 -->
 <div class="busy d-none" id="busy"><div class="busy-box"><div class="spinner-border text-primary" role="status"></div><div class="mt-2" id="busy_msg">計算中…</div>

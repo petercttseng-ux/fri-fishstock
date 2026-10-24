@@ -26,3 +26,13 @@ table.fs-tab td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .about h5 { margin-top: 1.2rem; color: var(--fs-navy); }
 .empty { color: #888; padding: 2rem; text-align: center; border: 1px dashed #ccc; border-radius: .5rem; background: #fff; }
 @media (max-width: 991px) { .sidebar { position: static; max-height: none; } }
+
+/* 主選單常駐顯示（不收合）；窄螢幕時可左右捲動 */
+.fs-navwrap { flex-wrap: nowrap; gap: .75rem; }
+.fs-menu { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; flex: 1 1 auto; min-width: 0; }
+.fs-menu::-webkit-scrollbar { display: none; }
+.fs-menu .nav-link { white-space: nowrap; padding: .5rem .7rem; }
+.fs-org { white-space: nowrap; color: #fff !important; opacity: .9; }
+.fs-footer { text-align: center; font-size: .82rem; color: #5f6368; padding: 1rem .5rem 1.5rem; border-top: 1px solid #dfe5ee; margin-top: 1rem; }
+@media (max-width: 1199px) { .fs-navwrap { flex-wrap: wrap; } .fs-menu { order: 3; flex-basis: 100%; } .navbar-brand { font-size: 1.05rem; } }
+@media (max-width: 575px) { .fs-org { order: 2; font-size: .75rem; } }

@@ -289,7 +289,7 @@ table.sum th { width: 24%; text-align: center; font-weight: 400; } table.sum td 
     const analysis = list.map(x => x.method || '').join(''), status = list.map(x => x.status || '').join('');
     let body = (demo ? '<div class="wm">範例資料（模擬）</div><div class="notice">本報告使用系統內附之範例資料（模擬資料，非真實漁業資料），僅供操作示範，不得作為資源評估結論。</div>' : '') +
       `<div class="title"><h1>${esc(sp)}${area ? `<span class="area">${esc(area)}</span>` : ''}</h1>${sub ? `<div class="sub">（${sub}）</div>` : ''}` +
-      `<div class="meta">報告產製日期：${new Date().toISOString().slice(0, 10)}　｜　${esc(FS.APP_NAME)} ${esc(FS.APP_VERSION)}</div></div><div class="cols">` +
+      `<div class="meta">報告產製日期：${new Date().toISOString().slice(0, 10)}　｜　${esc(FS.APP_NAME)} ${esc(FS.APP_VERSION)}　｜　農業部水產試驗所 AI應用小組</div></div><div class="cols">` +
       (blank(opt.agency) ? '' : `<h2>管理及相關機關</h2><div class="agency">${para(opt.agency)}</div>`) +
       sec('最近動態', blank(opt.recent) ? autoRecent : para(opt.recent)) + sec('利用及用途', para(opt.use)) + sec('漁業概要', para(opt.fishery) + (C ? C.html : '')) +
       sec('生物學特性', para(opt.bio) + (S.lf ? S.lf.bio : '')) + (blank(analysis) && blank(status) ? '' : '<h2>資源狀態</h2>' + analysis + status) +
@@ -305,7 +305,7 @@ table.sum th { width: 24%; text-align: center; font-weight: 400; } table.sum td 
       if (onProgress) onProgress((k + 1) / c.jobs.length);
     }
     body = body.replace(/<img data-id="(img\d+)" alt="">/g, (_, id) => `<img src="${imgs[id] || ''}" alt="">`);
-    const hl = `${yr} 年度　漁業資源評估報告`, hr = [sp, area].filter(Boolean).join('　').replace(/"/g, "'"), foot = `© ${yr} 農業部水產試驗所`;
+    const hl = `${yr} 年度　漁業資源評估報告`, hr = [sp, area].filter(Boolean).join('　').replace(/"/g, "'"), foot = `© ${yr} 農業部水產試驗所 AI應用小組`;
     return renumber(`<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(sp)} 資源評估報告</title><style>${css(hl, hr, foot)}</style></head><body>` +
       `<div class="toolbar"><button onclick="window.print()">列印／另存為 PDF</button><span>於列印對話框選擇「另存為 PDF」，紙張 A4；建議使用 Microsoft Edge 或 Google Chrome，並勾選「背景圖形」。</span></div>` +
       `<div class="sheet">${body}</div></body></html>`);
